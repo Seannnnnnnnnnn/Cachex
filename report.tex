@@ -1,0 +1,84 @@
+\documentclass{article}
+
+% PACKAGES 
+\usepackage[utf8]{inputenc}
+\usepackage{amsbsy}
+\usepackage{fixltx2e}
+\usepackage{amsfonts}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{xcolor}
+\usepackage{color} 
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amssymb}
+\usepackage{appendix}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\def\code#1{\texttt{#1}}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+}
+
+\begin{document}
+%%TABLE OF CONTENTS%%
+\section*{Cachex - $A*$ Search Algorithm} \\
+\begin{center}
+    \text{Sean Conlon $\hspace{5mm}$ 129886 $\hspace{5mm}$ sconlon@student.unimelb.edu}
+    \text{$\hspace{15mm}$ Chow Wai Kin Wilkin $\hspace{5mm}$ 1068161 $\hspace{5mm}$ cwilkin@student.unimelb.edu}
+\end{center}
+
+$\vspace{3mm}$
+
+\textit{The first section of the project involving the fictitious 'Cachex' game is the implementation of the famed A* Search Algorithm, to find an optimal traversal throughout a given board. For now, the state of the board is constant.} \\
+
+\subsubsection*{Section 1. Implementation \& Analysis of $A*$}
+The implementation of the $A*$ search algorithm closely follows the pseudo-code described in the algorithms \href{https://en.wikipedia.org/wiki/A*_search_algorithm}{wikipedia page}. There are two main data structure considerations when implementing the algorithm 
+\begin{enumerate}
+    \item Storing and accessing node $n$'s path value $g(n)$, and total distance value estimate $f(n)$.
+    \item The priority queue, for popping the node with the smallest current distance estimate. 
+\end{enumerate}
+The first of the two problems can be solved easily and efficiently with a hash map, or a Python \code{dict}. In our implementation, we store these values in the dictionaries \code{g\_score} and \code{f\_score} respectively. The use of a dictionary results in efficient $O(1)$ insertion, update and access for when we require these values for a particular node throughout the algorithm. On a slightly technical note,  the algorithm requires an initialisation of $f(v) = g(v) = \infty \quad  \forall v\in T$, where $T$ is the search tree. We ensure this by instancing the \code{g\_score} and \code{f\_score} dictionaries as \code{defaultdict}'s with Pythons equivalent of infinity, \code{float('inf')}. \\
+\\
+To address the second consideration, a Min Heap data structure was chosen to maintain the priority queue of node $f(\cdot)$ values. Python provides a robust implementation of a Min Heap with the \code{heapq} library. As we require the queue to be maintained on priority of smallest $f(\cdot)$ value\footnote{That is, the node $n$ that produces smallest \code{f(n)} is placed at the front of the queue.}, we add Tuples of \code{(f(n), n)} to the heap. In terms of complexity, on each iteration of the algorithm, we pop and potentially insert to the heap, each operation requires $O(\log k)$ complexity, where $k$ is the amount of elements in the heap.\\
+\\
+In general, the time complexity of $A^*$ search is dependant on the choice of heuristic, and how well it prunes away branches of the search tree. In a worst-scenario, the heuristic provides no insight and results in $O(b^d)$ time complexity, with $b$ and $d$ representing branching factor of the search space and depth of goal node respectively. As we store all discovered nodes in a Min Heap data structure, this means that the space complexity is similar to that of depth-first search, which is $O(b^m)$.
+
+
+
+\subsubsection*{Section 2. Choice of Heuristic Function}
+As input to the algorithm, $A*$ search requires an admissible heuristic function. Recall that a heuristic function $h$ is admissible if $h(v) \leq h^*(v) \quad \forall v$ where $h^*$ is the true distance. For our implementation, we chose the $L_1$ metric, also known as \textit{Manhattan distance}. The heuristic estimates distance between a potential node $v$ and goal node $G$ as 
+\begin{align*}
+    h(v) &= \sum_{i=1}^2 |v_i - G_i| \\
+         &= |v_1 - G_1| + |v_2 - G_2|
+\end{align*}
+As the $L_1$ function performs a simple and bounded computation of a given node, this adds an additional $O(1)$ work each time it is computed.
+The $L_1$ metric is clearly admissible, as the optimal distance between any two points $p_1 = (x_1, y_1)$ and $p_2 = (x_2, y_2)$ is given by the path of traversing along the $y$ axis and then $x$ axis resulting in a path length of
+$$|x_1-x_2|+|y_1-y_2| = L_1(p_1, p_2)$$
+This is never forms an overestimate between $p_1, p_2$ as there may be cells occupied along the way, thereby resulting the \textit{true}\footnote{As in true, optimal distance between $p_1$ and $p_2$} distance between larger.
+
+\subsubsection*{Section 3. Extending the Problem}
+We now consider an extension of the problem, in which we can include already colored board pieces to our path. We can extend our algorithm by making the cost to reach any compatibly colored node (from an adjacent position) 0. This would encourage $A*$ search, or any other Best-First Search algorithm to explore these nodes and thereby likely to incorporate them into a solution\footnote{In the case of $A*$ search, they will definitely be included into the solution when it is optimal to do so}. \\
+\\
+Unfortunately, extending the problem in such a way renders the $L_1$ distance metric as a no-longer admissible heuristic. To illustrate why $L_1$ may result in an overestimate of the distance, consider the case that we wish to perform a path find between node $(0,0)$ and goal node $G = (0,3)$. Under the $L_1$ heuristic, we have the distance estimate for $(0,1)$
+\begin{align*}
+    h(n) = |0-0| + |1-3| = 2
+\end{align*}
+However, suppose that $(0,2)$ is one such colored cell that can be included into the solution with cost 0, then this would make the \textit{true} shortest distance between $(0,1)$ and $(0,3)$ as 1; thus the heuristic overestimated the true cost and is therefore not admissible.
+
+\end{document}
