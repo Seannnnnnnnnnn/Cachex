@@ -23,12 +23,12 @@ class State:
     def update(self, color, action):
         """ updates the state of the game given action """
 
-        if action[0] == "PLACE":
+        if action[0].upper() == "PLACE":
             r, q = action[1], action[2]
             self.board[(r, q)] = color
             self.check_capture(r, q, color)
 
-        if action[0] == "STEAL":
+        if action[0].upper() == "STEAL":
             mid = int(self.board_size/2)
             self.board[(mid, mid)] = "Blue"
 
