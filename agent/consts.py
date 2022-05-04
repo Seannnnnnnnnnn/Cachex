@@ -4,5 +4,5 @@ infinity = float('inf')
 neg_infinity = float('-inf')
 
 
-def evaluation_func(state):
+def evaluation_func(state, player):
     return 2

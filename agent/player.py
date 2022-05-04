@@ -1,3 +1,5 @@
+from agent.game_state import State
+
 
 class Player:
     def __init__(self, player, n):
@@ -9,7 +11,10 @@ class Player:
         play as Red, or the string "blue" if your player will play
         as Blue.
         """
-        # put your code here
+        game_state = State(player, n)
+        self.state = game_state
+        self.color = player
+        self.ply_number = 0
 
     def action(self):
         """
@@ -29,5 +34,6 @@ class Player:
         the same as what your player returned from the action method
         above. However, the referee has validated it at this point.
         """
-        # put your code here
+        self.state.update(player, action)
+        self.ply_number += 1
 

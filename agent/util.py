@@ -1,5 +1,5 @@
 """
-COMP30024 Artificial Intelligence, Semester 1, 2021
+COMP30024 Artificial Intelligence, Semester 1, 2022
 Project Part A: Searching
 
 This module contains some helper functions for printing actions and boards.
@@ -7,7 +7,6 @@ Feel free to use and/or modify them to help you develop your program.
 """
 
 from itertools import islice
-
 
 def apply_ansi(str, bold=True, color=None):
     """
@@ -32,7 +31,6 @@ def apply_ansi(str, bold=True, color=None):
         color_code = "\033[34m"
     return f"{bold_code}{color_code}{str}\033[0m"
 
-
 def print_coordinate(r, q, **kwargs):
     """
     Output an axial coordinate (r, q) according to the format instructions.
@@ -40,7 +38,6 @@ def print_coordinate(r, q, **kwargs):
     Any keyword arguments are passed through to the print function.
     """
     print(f"({r},{q})", **kwargs)
-
 
 def print_board(n, board_dict, message="", ansi=False, **kwargs):
     """
@@ -149,3 +146,16 @@ def print_board(n, board_dict, message="", ansi=False, **kwargs):
 
     # Print to terminal (with optional args forwarded)
     print(output, **kwargs)
+
+
+if __name__ == '__main__':
+    board_dict = {
+        (0, 4): "hello",
+        (1, 1): "r",
+        (1, 2): "b",
+        (3, 2): "$",
+        (2, 3): "***",
+        }
+    print_board(5, board_dict)
+
+    print(board_dict)

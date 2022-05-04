@@ -50,9 +50,6 @@ class Board:
         """
         Initialise board of given size n.
         """
-        """save token coord by colour"""
-        self.blue = []
-        self.red = []
         self.n = n
         self._data = zeros((n, n), dtype=int)
 
@@ -67,8 +64,6 @@ class Board:
         Set the token at given board coord (r, q).
         """
         self._data[coord] = _TOKEN_MAP_IN[token]
-        if token == "blue":self.blue.append(coord)
-        if token == "red":self.red.append(coord)
 
     def digest(self):
         """

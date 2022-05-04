@@ -79,7 +79,7 @@ def legitimate(node: Tuple[int, int], n: int, blocks: List[Tuple]) -> bool:
 
 
 if __name__ == '__main__':
-    from Cachex.heuristics import l1
+    from search.heuristics import l1
     solution = A_Star(start=(4, 2), goal=(0, 0), h=l1, n=5, blocks=[(1, 0), (1, 1), (1, 3), (3, 2)])
     print(solution)
 
