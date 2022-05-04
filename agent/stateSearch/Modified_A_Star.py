@@ -1,6 +1,17 @@
+"""
+modified variant of the A* implementation found in the search module. includes a super source and super sink
+node for both red and blue.
+"""
 from typing import List, Callable, Tuple
 from collections import defaultdict
 import heapq
+
+
+
+"""
+TODO: add in owned_blocks as a parameter - we visit a node that has one of these as a neighbor, 
+      pop it, and its neighbors in instead
+"""
 
 
 def A_Star(start: str, goal: str, h: Callable, n: int, blocks: List[Tuple] = []):

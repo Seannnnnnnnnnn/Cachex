@@ -4,7 +4,6 @@ import numpy as np
 
 def l1(v1: List[int], v2: List[int], n) -> int:
     """ computes L1 distance between v1 and v2 - L1 modified for the hexagonal grid """
-    # assert len(v1) == len(v2):
     if type(v1) == type(v2) == str: return n
     if type(v1) != type(v2) and (type(v1) == str or type(v2) == str): return 1
 
