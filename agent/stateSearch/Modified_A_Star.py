@@ -7,13 +7,6 @@ from collections import defaultdict
 import heapq
 
 
-
-"""
-TODO: add in owned_blocks as a parameter - we visit a node that has one of these as a neighbor, 
-      pop it, and replace with its neighbors instead
-"""
-
-
 def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tuple], blocks: List[Tuple] = []):
     """
     :param start: start node
@@ -114,10 +107,5 @@ def get_sink_node_neighbors(node, n):
         return []
 
 
-if __name__ == '__main__':
-    from agent.stateSearch.hueristics import l1
-    solution = A_Star("blue start", "blue goal", h=l1, n=5, blocks=[(0, 1), (1, 1), (1, 3), (3, 2)])
-    print(solution)
-    solution = A_Star("red start", "red goal", h=l1, n=5, blocks=[(0, 1), (1, 1), (1, 3), (3, 2)])
-    print(solution)
+
 

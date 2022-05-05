@@ -7,5 +7,5 @@ solution = A_Star("blue start", "blue goal", h=l1, n=6, owned_positions=[], bloc
 print(solution)
 solution = A_Star("red start", "red goal", h=l1, n=6, owned_positions=[], blocks=[(0, 1), (1, 1), (3, 0), (3, 2)])
 print(solution)
-solution = A_Star("red start", "red goal", h=l1, n=6, owned_positions=[(5, 0), (2, 0)], blocks=[])
+solution = A_Star("red start", "red goal", h=l1, n=5, owned_positions=[(2, 2), (4, 2)], blocks=[])
 print(solution)

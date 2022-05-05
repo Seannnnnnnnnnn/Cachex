@@ -1,5 +1,6 @@
 from typing import List
 import numpy as np
+# TODO: design heuristic function to support owned positions
 
 
 def l1(v1: List[int], v2: List[int], n) -> int:
