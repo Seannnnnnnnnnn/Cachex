@@ -10,17 +10,18 @@ import heapq
 
 """
 TODO: add in owned_blocks as a parameter - we visit a node that has one of these as a neighbor, 
-      pop it, and its neighbors in instead
+      pop it, and replace with its neighbors instead
 """
 
 
-def A_Star(start: str, goal: str, h: Callable, n: int, blocks: List[Tuple] = []):
+def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tuple], blocks: List[Tuple] = []):
     """
     :param start: start node
     :param goal: goal node
     :param h: heuristic function
     :param n: board size (n x n)
     :param blocks: board size (n x n)
+    :param owned_positions
 
     performs A* search on a given board, return 0 in the case there is no path between start and goal.
     The priority queue functionality required for the algorithm utilises a min-heap via the heapq library.
@@ -35,13 +36,11 @@ def A_Star(start: str, goal: str, h: Callable, n: int, blocks: List[Tuple] = [])
     heapq.heappush(discovered, (f_score[start], start))
 
     while len(discovered) > 0:
-
         current = heapq.heappop(discovered)[1]  # second element contains the (x,y) coordinates of the node
-
         if current == goal:
             return construct_solution(came_from, current)
 
-        for neighbor in get_neighbors(current, n):
+        for neighbor in get_neighbors(current, n, owned_positions):
             if legitimate(neighbor, n, blocks):  # if the neighbour node generated is a legitimate board position:
 
                 tentative_score = g_score[current] + 1
@@ -65,7 +64,7 @@ def construct_solution(came_from, current):
     return total_path
 
 
-def get_neighbors(node: List[int], n: int) -> List[Tuple[int, int]]:
+def get_neighbors(node: List[int], n: int, owned_positions: List[Tuple]) -> List[Tuple[int, int]]:
     """
     returns a list containing the neighbors of node - we check that the neighbor is valid when performing the search
     """
@@ -74,6 +73,13 @@ def get_neighbors(node: List[int], n: int) -> List[Tuple[int, int]]:
     else:
         x, y = node[0], node[1]
         neighbors = [(x - 1, y), (x + 1, y), (x, y + 1), (x, y - 1), (x - 1, y + 1), (x + 1, y - 1)]
+
+        for neighbor in neighbors:
+            if neighbor in owned_positions:
+                x, y = neighbor[0], neighbor[1]
+                neighbors.remove(neighbor)
+                owned_positions.remove(neighbor)
+                neighbors += get_neighbors([x, y], n, owned_positions)
 
         if y == n - 1:  # blue edge of board
             neighbors.append("blue goal")
