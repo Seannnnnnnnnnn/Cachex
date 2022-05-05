@@ -10,6 +10,10 @@ NOTE THE 0 INDEXING!
 from agent.util import *
 from typing import List, Tuple
 
+# TODO: switch rule?
+# TODO: switch moving player
+# TODO: incorporate evaluation function
+
 
 class State:
     def __init__(self, color, board_size, board=None):
@@ -57,6 +61,9 @@ class State:
             board[r][q] = self.board[position]
         return board
 
+    def get_positions(self, color: str) -> List[Tuple]:
+        return [position for position in self.board.keys() if self.board[position] == color]
+
     def is_valid(self, point):
         r, q = point[0], point[1]
         return 0 <= r < self.board_size and 0 <= q < self.board_size
@@ -92,3 +99,17 @@ class State:
                 self.board[p1] = ""
                 self.board[p2] = ""
         except KeyError: pass
+
+    def evaluate_action(self, color, action):
+        """
+        produces a dummy state following each action and returns an evaluation of it
+        """
+        child = State(self.color, self.board_size, self.board.copy())
+        child.update(color, action)
+        return child.evaluate(color)
+
+    def evaluate(self, color):
+        """
+        evaluation of the state from the position of color
+        """
+        return
