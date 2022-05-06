@@ -125,5 +125,17 @@ class State:
         opponent_start, opponent_goal = start_goal_node(opponent)
         opponent_path = A_Star(opponent_start, opponent_goal, h=l1, n=self.board_size, owned_positions=opponent_positions,
                       blocks=owned_positions)
-
         return len(opponent_path) - len(path)
+
+    def num_plays_to_win(self, color):
+        """
+        computes the number of plays required for color to win. We subtract 2 as path includes start and goal node
+        """
+        opponent = opponent_color(color)
+        owned_positions = self.get_positions(color)
+        opponent_positions = self.get_positions(opponent)
+        start, goal = start_goal_node(color)
+        path = A_Star(start, goal, h=l1, n=self.board_size, owned_positions=owned_positions,
+                      blocks=opponent_positions)
+        print(path)
+        return len(path)-2

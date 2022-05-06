@@ -27,8 +27,9 @@ def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tup
     """
     start, goal = get_start_goal_nodes(start, goal)
     discovered = []
+    owned_positions_copy = owned_positions.copy()      # see line 64 for why we take a copy
     g_score, f_score, came_from = defaultdict(lambda: float('inf')), defaultdict(lambda: float('inf')), {}
-    g_score[start], f_score[start] = 0, h(start, goal, n)
+    g_score[start], f_score[start] = 0, h(start, goal, n, owned_positions)
 
     heapq.heapify(discovered)
     heapq.heappush(discovered, (f_score[start], start))
@@ -36,7 +37,7 @@ def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tup
     while len(discovered) > 0:
         current = heapq.heappop(discovered)[1]  # second element contains the (x,y) coordinates of the node
         if current == goal:
-            return construct_solution(came_from, current)
+            return construct_solution(came_from, current, owned_positions_copy)
 
         for neighbor in get_neighbors(current, n, owned_positions):
             if legitimate(neighbor, n, blocks):  # if the neighbour node generated is a legitimate board position:
@@ -45,20 +46,26 @@ def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tup
                 if tentative_score < g_score[neighbor]:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_score
-                    f_score[neighbor] = tentative_score + h(neighbor, goal, n)
+                    f_score[neighbor] = tentative_score + h(neighbor, goal, n, owned_positions)
 
                     if neighbor not in discovered:
                         heapq.heappush(discovered, (f_score[neighbor], neighbor))
     return []
 
 
-def construct_solution(came_from, current):
+def construct_solution(came_from, current, owned_positions):
     """ produces solution path """
     total_path = [current]
     while current in came_from.keys():
         current = came_from[current]
         total_path.append(current)
     total_path.reverse()
+
+    # for very specific test cases - some border positions that are owned appear in the path solution.
+    # so, we just manually remove them
+    for position in owned_positions:
+        if position in total_path: total_path.remove(position)
+
     return total_path
 
 
@@ -84,7 +91,7 @@ def get_neighbors(node: Tuple[int], n: int, owned_positions: List[Tuple]) -> Lis
 
         if x == n - 1:  # red edge of board
             neighbors.append((0, infinity))
-    return neighbors
+    return list(dict.fromkeys(neighbors))
 
 
 def legitimate(node: Tuple[int, int], n: int, blocks: List[Tuple]) -> bool:
@@ -121,3 +128,8 @@ def get_start_goal_nodes(start, end):
     else:
         return start, end
 
+
+if __name__ == '__main__':
+    positions = [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2)]
+    neighbors = get_neighbors((0, 2), 6, positions)
+    print(neighbors)
