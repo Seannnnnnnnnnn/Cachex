@@ -5,13 +5,9 @@ node for both red and blue.
 from typing import List, Callable, Tuple
 from collections import defaultdict
 import heapq
-from agent.consts import neg_infinity, infinity
 
 
-start_goal_nodes = [(neg_infinity, 0), (infinity, 0), (0, neg_infinity), (0, infinity)]
-
-
-def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tuple], blocks: List[Tuple] = []):
+def legacy_A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tuple], blocks: List[Tuple] = []):
     """
     :param start: start node
     :param goal: goal node
@@ -19,13 +15,11 @@ def A_Star(start: str, goal: str, h: Callable, n: int, owned_positions: List[Tup
     :param n: board size (n x n)
     :param blocks: board size (n x n)
     :param owned_positions
-
     performs A* search on a given board, return 0 in the case there is no path between start and goal.
     The priority queue functionality required for the algorithm utilises a min-heap via the heapq library.
     We heappush tuples of (f_score(node), node) to maintain the heap based on f_score.
     nodes with lowest f_score are always at the top of the heap, so when pop() is called, the min is always produced
     """
-    start, goal = get_start_goal_nodes(start, goal)
     discovered = []
     g_score, f_score, came_from = defaultdict(lambda: float('inf')), defaultdict(lambda: float('inf')), {}
     g_score[start], f_score[start] = 0, h(start, goal, n)
@@ -62,11 +56,11 @@ def construct_solution(came_from, current):
     return total_path
 
 
-def get_neighbors(node: Tuple[int], n: int, owned_positions: List[Tuple]) -> List[Tuple[int, int]]:
+def get_neighbors(node: List[int], n: int, owned_positions: List[Tuple]) -> List[Tuple[int, int]]:
     """
     returns a list containing the neighbors of node - we check that the neighbor is valid when performing the search
     """
-    if node in start_goal_nodes:
+    if type(node) == str:
         neighbors = get_sink_node_neighbors(node, n)
     else:
         x, y = node[0], node[1]
@@ -80,10 +74,10 @@ def get_neighbors(node: Tuple[int], n: int, owned_positions: List[Tuple]) -> Lis
                 neighbors += get_neighbors([x, y], n, owned_positions)
 
         if y == n - 1:  # blue edge of board
-            neighbors.append((infinity, 0))
+            neighbors.append("blue goal")
 
         if x == n - 1:  # red edge of board
-            neighbors.append((0, infinity))
+            neighbors.append("red goal")
     return neighbors
 
 
@@ -92,32 +86,20 @@ def legitimate(node: Tuple[int, int], n: int, blocks: List[Tuple]) -> bool:
     :param node: potential node
     :param n: board size
     :param blocks: contains (x,y) coordinates of occupied or 'blocked' spaces on the board
-
     the get_neighbors function generates all 6 adjacent positions any given node on a board. this function ensures that
     the position generated is legitimate, so we don't search position (-1, -1) for example
     """
     if node in blocks: return False
-    if node in start_goal_nodes: return True
+    if type(node) == str: return True
     for coordinate in node:
         if coordinate < 0 or coordinate >= n: return False
     return True
 
 
 def get_sink_node_neighbors(node, n):
-    if node == (neg_infinity, 0):
+    if node == "blue start":
         return [(i, 0) for i in range(n)]
-    elif node == (0, neg_infinity):
+    elif node == "red start":
         return [(0, i) for i in range(n)]
     else:
         return []
-
-
-def get_start_goal_nodes(start, end):
-    """ we represent the start/end sink notes as tuples for consistency with heap-pop """
-    if start == "blue start":
-        return (neg_infinity, 0), (infinity, 0)
-    elif start == "red start":
-        return (0, neg_infinity), (0, infinity)
-    else:
-        return start, end
-

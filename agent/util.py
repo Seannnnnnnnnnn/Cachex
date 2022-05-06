@@ -150,6 +150,15 @@ def print_board(n, board_dict, message="", ansi=False, **kwargs):
     print(output, **kwargs)
 
 
+def opponent_color(color: str):
+    if color == "red": return "blue"
+    else: return "red"
+
+
+def start_goal_node(color: str):
+    return color+" start", color+" goal"
+
+
 if __name__ == '__main__':
     board_dict = {
         (0, 4): "hello",

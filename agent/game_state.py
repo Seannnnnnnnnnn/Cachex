@@ -7,8 +7,10 @@ otherwise.
 
 NOTE THE 0 INDEXING!
 """
-from agent.util import *
+from agent.util import print_board, opponent_color, start_goal_node
 from typing import List, Tuple
+from agent.stateSearch.Modified_A_Star import A_Star
+from agent.stateSearch.hueristics import l1
 
 # TODO: switch rule?
 # TODO: switch moving player
@@ -110,6 +112,18 @@ class State:
 
     def evaluate(self, color):
         """
-        evaluation of the state from the position of color
+        evaluation of the state from the perspective of given color
         """
-        return
+        opponent = opponent_color(color)
+
+        owned_positions = self.get_positions(color)
+        opponent_positions = self.get_positions(opponent)
+        start, goal = start_goal_node(color)
+        path = A_Star(start, goal, h=l1, n=self.board_size, owned_positions=owned_positions,
+                      blocks=opponent_positions)
+
+        opponent_start, opponent_goal = start_goal_node(opponent)
+        opponent_path = A_Star(opponent_start, opponent_goal, h=l1, n=self.board_size, owned_positions=opponent_positions,
+                      blocks=owned_positions)
+
+        return len(opponent_path) - len(path)

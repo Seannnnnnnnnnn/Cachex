@@ -4,15 +4,6 @@ from agent.stateSearch.hueristics import l1
 from typing import List, Tuple
 
 
-def opponent_color(color: str):
-    if color == "red": return "blue"
-    else: return "red"
-
-
-def start_goal_node(color: str):
-    return color+" start", color+" goal"
-
-
 class Player:
     def __init__(self, player, n):
         """
@@ -29,7 +20,6 @@ class Player:
         self.board_size = n
         self.color = player
         self.ply_number = 0
-        self.start, self.goal = start_goal_node(self.color)
 
     def action(self):
         """
@@ -67,7 +57,6 @@ class Player:
         path.remove(self.start)
         path.remove(self.goal)
         actions = self.generate_potential_actions(path)
-
         return
 
     @staticmethod
