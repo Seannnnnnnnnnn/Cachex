@@ -1,4 +1,4 @@
-from agent.game_state import State
+from greedy_agent.game_state import State
 
 
 class Player:
@@ -21,7 +21,7 @@ class Player:
         Called at the beginning of your turn. Based on the current state
         of the game, select an action to play.
         """
-        action = self.state.generate_action_alpha_beta()
+        action = self.state.generate_action()
         return action
     
     def turn(self, player, action):

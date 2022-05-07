@@ -10,17 +10,17 @@ NOTE THE 0 INDEXING!
 from agent.util import print_board, opponent_color, start_goal_node
 from typing import List, Tuple
 from agent.stateSearch.Modified_A_Star import A_Star
-from agent.stateSearch.hueristics import l1
-from agent.stateSearch.alpha_beta import alpha_beta_minimax
-from agent.consts import sigmoid, neg_infinity, infinity
+from agent.stateSearch.hueristics import l1, true_l1
+from agent.consts import sigmoid, neg_infinity
 
 
 class State:
     def __init__(self, color, board_size, board=None):
         self.board_size = board_size
         self.color = color
-        self.ply_number = 0
+        self.ply = 0
         self.latest_action = None  # store the latest action we have received - this is used to derive optimal action
+        self.center = (self.board_size//2, self.board_size//2)
         if board:
             self.board = board
         else:
@@ -32,7 +32,7 @@ class State:
     def update(self, color, action):
         """ updates the state of the game given action """
         self.latest_action = action
-        self.ply_number += 1
+        self.ply += 1
         if action[0].upper() == "PLACE":
             r, q = action[1], action[2]
             self.board[(r, q)] = color
@@ -46,9 +46,6 @@ class State:
 
     def is_empty(self, r, q):
         return (r, q) not in self.board.keys() or self.board[(r, q)] == ""
-
-    def is_terminal(self):
-        return self.evaluate(self.color) == 1 or self.evaluate(self.color) == -1
 
     def children(self) -> List:
         """ generates all child positions of the current game state """
@@ -83,6 +80,7 @@ class State:
         """ checks if placing in position r q results in a capture """
         diamonds = [
             [(r - 1, q), (r + 1, q - 1), (r, q - 1)],  # first two are adjacent, last item in list is adjacent to (r,q)
+            [(r+1, q), (r-1, q+1), (r, q+1)],
             [(r, q - 1), (r + 1, q), (r + 1, q - 1)],
             [(r + 1, q - 1), (r, q + 1), (r + 1, q)],
             [(r - 1, q), (r, q + 1), (r - 1, q + 1)],
@@ -95,8 +93,13 @@ class State:
             [(r, q - 1), (r - 1, q), (r - 1, q - 1)]
         ]
 
+        points_to_delete = []
         for diamond in diamonds:
-            self._validate_diamond(diamond, color)
+            points = self._validate_diamond(diamond, color)
+            if points: points_to_delete += points
+
+        for point in points_to_delete:
+            self.board[point] = ""
 
     def _validate_diamond(self, diamond: List[Tuple], color):
         """
@@ -105,32 +108,36 @@ class State:
         """
         p1, p2 = diamond[0], diamond[1]
         p3 = diamond[2]
+
         try:
-            if self.board[p1] == self.board[p2] and self.board[p3] == color:
-                self.board[p1] = ""
-                self.board[p2] = ""
+            if self.board[p1] == self.board[p2] and self.board[p3] == color and color != self.board[p1]\
+                    and self.board[p3] != self.board[p1] and self.board[p2] != self.board[p3]:
+                return [p1, p2]
         except KeyError: pass
 
-    def generate_action_alpha_beta(self):
+    def generate_action(self):
         """ controls the logic for deciding the next action """
+        if self.ply == 0:
+            return "PLACE", 2, 0
+
         max_eval = neg_infinity
         action = None
         for child in self.children():
-            evaluation = alpha_beta_minimax(child, 2, neg_infinity, infinity, True)
+            evaluation = self.evaluate_path(self.color) + 0.1*self.evaluate_position(child.latest_action)
             if evaluation > max_eval:
                 max_eval = evaluation
                 action = child.latest_action
         return action
 
-    def evaluate_action(self, color, action):
-        """
-        produces a dummy state following each action and returns an evaluation of it
-        """
-        child = State(self.color, self.board_size, self.board.copy())
-        child.update(color, action)
-        return child.evaluate(color)
+    def evaluate(self):
+        return self.evaluate_path(self.color) + 0.1*self.evaluate_position(self.latest_action)
 
-    def evaluate(self, color):
+    def evaluate_position(self, action):
+        """ central positions are good - we evaluate a position based on its l1 distance to centre """
+        r, q = action[1], action[2]
+        return self.board_size-true_l1(self.center, (r, q))
+
+    def evaluate_path(self, color):
         """
         evaluation of the state from the perspective of given color
         """
@@ -149,7 +156,7 @@ class State:
         else:
             net_path_length = agent_path_length - opponent_path_length
             net_piece_count = len(owned_positions) - len(opponent_positions)
-            return sigmoid(net_path_length + 0.5*net_piece_count)
+            return 1.5*sigmoid(net_path_length) + 0.2*net_piece_count
 
     def num_plays_to_win(self, color):
         """

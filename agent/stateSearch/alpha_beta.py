@@ -1,10 +1,10 @@
 """ contains code for alpha-beta pruning """
-from agent.consts import *
+from agent.consts import infinity, neg_infinity
 
 
 def alpha_beta_minimax(position, depth, alpha, beta, maximising_player):
-    if depth == 0 or position.isTerminal():
-        return evaluation_func(position)
+    if depth == 0 or position.is_terminal():
+        return position.evaluate()
 
     if maximising_player:
         maxEval = neg_infinity

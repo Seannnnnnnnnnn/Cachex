@@ -69,6 +69,7 @@ def true_l1(v1, v2) -> int:
     else:
         return max(abs(dx), abs(dy))
 
+
 if __name__ == '__main__':
     # should be 0, as potential path can traverse along owned positions in a straight line
     owned_positions = [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2)]
