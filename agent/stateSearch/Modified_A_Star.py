@@ -128,8 +128,3 @@ def get_start_goal_nodes(start, end):
     else:
         return start, end
 
-
-if __name__ == '__main__':
-    positions = [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2)]
-    neighbors = get_neighbors((0, 2), 6, positions)
-    print(neighbors)

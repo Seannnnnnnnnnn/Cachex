@@ -146,8 +146,7 @@ def print_board(n, board_dict, message="", ansi=False, **kwargs):
     lower_stitching = stitching(int(h_spacing / 2) - 1, stitch_length)
     output += apply_ansi_s(lower_stitching, color="r") + "\n"
 
-    # Print to terminal (with optional args forwarded)
-    print(output, **kwargs)
+    return output
 
 
 def opponent_color(color: str):

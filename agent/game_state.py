@@ -11,48 +11,53 @@ from agent.util import print_board, opponent_color, start_goal_node
 from typing import List, Tuple
 from agent.stateSearch.Modified_A_Star import A_Star
 from agent.stateSearch.hueristics import l1
-
-# TODO: switch rule?
-# TODO: switch moving player
-# TODO: incorporate evaluation function
+from agent.consts import sigmoid, neg_infinity
 
 
 class State:
     def __init__(self, color, board_size, board=None):
         self.board_size = board_size
         self.color = color
+        self.ply_number = 0
+        self.latest_action = None  # store the latest action we have received - this is used to derive optimal action
         if board:
             self.board = board
         else:
             self.board = {}
 
+    def __str__(self):
+        return print_board(self.board_size, self.board)
+
     def update(self, color, action):
         """ updates the state of the game given action """
+        self.latest_action = action
+        self.ply_number += 1
         if action[0].upper() == "PLACE":
             r, q = action[1], action[2]
             self.board[(r, q)] = color
             self.check_capture(r, q, color)
 
         if action[0].upper() == "STEAL":
-            mid = int(self.board_size/2)
-            self.board[(mid, mid)] = "Blue"
+            pos = next(iter(self.board))
+            r, q = pos[0], pos[1]
+            self.board[pos] = ""
+            self.board[(self.board_size-r-1, self.board_size-q-1)] = "blue"
 
     def is_empty(self, r, q):
         return (r, q) not in self.board.keys() or self.board[(r, q)] == ""
 
-    def print_state(self):
-        print_board(self.board_size, self.board)
-
     def children(self) -> List:
         """ generates all child positions of the current game state """
         children = []
+        opponent = opponent_color(self.color)
 
         for r in range(self.board_size):
             for q in range(self.board_size):
                 if self.is_empty(r, q):
-                    child = State(self.color, self.board_size, self.board.copy())
+                    child = State(opponent, self.board_size, self.board.copy())
                     child.update(self.color, ("PLACE", r, q))
                     children.append(child)
+
         return children
 
     def board_list(self):
@@ -102,6 +107,17 @@ class State:
                 self.board[p2] = ""
         except KeyError: pass
 
+    def generate_action(self):
+        """ controls the logic for deciding the next action """
+        max_eval = neg_infinity
+        action = None
+        for child in self.children():
+            evaluation = self.evaluate(self.color)
+            if evaluation > max_eval:
+                max_eval = evaluation
+                action = child.latest_action
+        return action
+
     def evaluate_action(self, color, action):
         """
         produces a dummy state following each action and returns an evaluation of it
@@ -118,24 +134,29 @@ class State:
 
         owned_positions = self.get_positions(color)
         opponent_positions = self.get_positions(opponent)
-        start, goal = start_goal_node(color)
-        path = A_Star(start, goal, h=l1, n=self.board_size, owned_positions=owned_positions,
-                      blocks=opponent_positions)
 
-        opponent_start, opponent_goal = start_goal_node(opponent)
-        opponent_path = A_Star(opponent_start, opponent_goal, h=l1, n=self.board_size, owned_positions=opponent_positions,
-                      blocks=owned_positions)
-        return len(opponent_path) - len(path)
+        agent_path_length = self.num_plays_to_win(color)
+        opponent_path_length = self.num_plays_to_win(opponent)
+
+        if opponent_path_length == 0:  # this occurs when agent forms a wall from one side to the other
+            return 1
+        elif agent_path_length == 0:
+            return -1
+        else:
+            net_path_length = agent_path_length - opponent_path_length
+            net_piece_count = len(owned_positions) - len(opponent_positions)
+            return sigmoid(net_path_length + 0.5*net_piece_count)
 
     def num_plays_to_win(self, color):
         """
         computes the number of plays required for color to win. We subtract 2 as path includes start and goal node
         """
         opponent = opponent_color(color)
+
         owned_positions = self.get_positions(color)
         opponent_positions = self.get_positions(opponent)
+
         start, goal = start_goal_node(color)
         path = A_Star(start, goal, h=l1, n=self.board_size, owned_positions=owned_positions,
                       blocks=opponent_positions)
-        print(path)
-        return len(path)-2
+        return len(path)

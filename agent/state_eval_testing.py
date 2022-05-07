@@ -10,10 +10,9 @@ state.update("red", ("Place", 4, 2))
 
 
 state.update("blue", ("Place", 3, 1))
-state.print_state()
 
 for child in state.children():
-    child.print_state()
+    print(child)
     print(child.evaluate("red"))
 
 
