@@ -118,7 +118,7 @@ class State:
     def generate_action(self):
         """ controls the logic for deciding the next action """
         if self.ply == 0:
-            return "PLACE", 2, 0
+            return "PLACE", 0, self.board_size//2
 
         max_eval = neg_infinity
         action = None

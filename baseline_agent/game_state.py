@@ -10,9 +10,8 @@ NOTE THE 0 INDEXING!
 from agent.util import print_board, opponent_color, start_goal_node
 from typing import List, Tuple
 from agent.stateSearch.Modified_A_Star import A_Star
-from agent.stateSearch.alpha_beta import alpha_beta_minimax
 from agent.stateSearch.hueristics import l1, true_l1
-from agent.consts import sigmoid, neg_infinity, infinity
+from agent.consts import sigmoid, neg_infinity
 
 
 class State:
@@ -48,9 +47,6 @@ class State:
     def is_empty(self, r, q):
         return (r, q) not in self.board.keys() or self.board[(r, q)] == ""
 
-    def is_terminal(self):
-        return self.evaluate_path(self.color) == 1 or self.evaluate_path(self.color) == -1
-
     def children(self) -> List:
         """ generates all child positions of the current game state """
         children = []
@@ -62,6 +58,7 @@ class State:
                     child = State(opponent, self.board_size, self.board.copy())
                     child.update(self.color, ("PLACE", r, q))
                     children.append(child)
+
         return children
 
     def board_list(self):
@@ -118,12 +115,15 @@ class State:
                 return [p1, p2]
         except KeyError: pass
 
-    def generate_action_alpha_beta(self, depth):
+    def generate_action(self):
         """ controls the logic for deciding the next action """
+        if self.ply == 0:
+            return "PLACE", 0, self.board_size//2
+
         max_eval = neg_infinity
         action = None
         for child in self.children():
-            evaluation = alpha_beta_minimax(child, depth, neg_infinity, infinity, True)
+            evaluation = self.evaluate_path(self.color)
             if evaluation > max_eval:
                 max_eval = evaluation
                 action = child.latest_action
@@ -143,9 +143,6 @@ class State:
         """
         opponent = opponent_color(color)
 
-        owned_positions = self.get_positions(color)
-        opponent_positions = self.get_positions(opponent)
-
         agent_path_length = self.num_plays_to_win(color)
         opponent_path_length = self.num_plays_to_win(opponent)
 
@@ -155,8 +152,7 @@ class State:
             return -1
         else:
             net_path_length = agent_path_length - opponent_path_length
-            net_piece_count = len(owned_positions) - len(opponent_positions)
-            return 1.5*sigmoid(net_path_length) + 0.2*net_piece_count
+            return net_path_length
 
     def num_plays_to_win(self, color):
         """
