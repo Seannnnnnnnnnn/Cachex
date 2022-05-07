@@ -15,15 +15,20 @@ class Player:
         self.state = game_state
         self.board_size = n
         self.color = player
+        self.turns = 0
 
     def action(self):
         """
         Called at the beginning of your turn. Based on the current state
         of the game, select an action to play.
         """
-        action = self.state.generate_action()
+        if self.turns == 0 and self.color == "blue":
+            action = ("STEAL",)
+        else:
+            action = self.state.generate_action()
+        self.turns += 1
         return action
-    
+
     def turn(self, player, action):
         """
         Called at the end of each player's turn to inform this player of 
@@ -36,4 +41,3 @@ class Player:
         above. However, the referee has validated it at this point.
         """
         self.state.update(player, action)
-

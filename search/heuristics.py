@@ -11,7 +11,7 @@ def l1(v1: List[int], v2: List[int]) -> int:
     return distance
 
 
-def l2(v1: List[int], v2: List[int]) -> int:
+def l2(v1: List[int], v2: List[int],own:[]) -> int:
     """
     computes L2 distance between v1 and v2 - not as good a heuristic for Cachex, as results
     in large underestimates.
@@ -19,7 +19,7 @@ def l2(v1: List[int], v2: List[int]) -> int:
     assert len(v1) == len(v2)
     distance, n = 0, len(v1)
     for i in range(n):
-        distance += (v1[i] - v2[i])**2
+        distance -= (v1[i] - v2[i])**2
     return sqrt(distance)
 
 
