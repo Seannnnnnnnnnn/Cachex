@@ -6,16 +6,21 @@ board[(r,q)] = "" if it is unoccupied, or the color of the occupier
 otherwise.
 
 NOTE THE 0 INDEXING!
+# TODO: test the game log
 """
 from agent.util import print_board, opponent_color
 from typing import List, Tuple
-from agent.consts import neg_infinity, evaluation_function_v2
+from agent.consts import neg_infinity, infinity, evaluation_function_v2
+from final_agent.stateSearch.alpha_beta import alpha_beta_minimax
+from final_agent.book_learning import move_book
+from time import time
 
 
 class State:
     def __init__(self, color, board_size, board=None):
         self.board_size = board_size
         self.color = color
+        self.time_cap = self.board_size**2
         self.ply = 0
         self.latest_action = None  # store the latest action we have received - this is used to derive optimal action
         self.center = (self.board_size//2, self.board_size//2)
@@ -36,14 +41,18 @@ class State:
             self.board[(r, q)] = color
             self.check_capture(r, q, color)
 
-        if action[0].upper() == "STEAL":
+        else:
             pos = next(iter(self.board))
             r, q = pos[0], pos[1]
             self.board[pos] = ""
-            self.board[(self.board_size-r-1, self.board_size-q-1)] = "blue"
+            self.board[(q, r)] = "blue"
 
     def is_empty(self, r, q):
         return (r, q) not in self.board.keys() or self.board[(r, q)] == ""
+
+    def is_terminal(self):
+        evaluation = self.evaluate(self.color)
+        return evaluation == neg_infinity or evaluation == infinity
 
     def children(self) -> List:
         """ generates all child positions of the current game state """
@@ -59,6 +68,14 @@ class State:
 
         return children
 
+    def board_list(self):
+        """ converts the state of the board into a list of lists """
+        board = [[0 for _ in range(self.board_size)] for _ in range(self.board_size)]
+        for position in self.board.keys():
+            r, q = position[0], position[1]
+            board[r][q] = self.board[position]
+        return board
+
     def get_positions(self, color: str) -> List[Tuple]:
         return [position for position in self.board.keys() if self.board[position] == color]
 
@@ -67,10 +84,7 @@ class State:
         return 0 <= r < self.board_size and 0 <= q < self.board_size
 
     def check_capture(self, r, q, color):
-        """
-        checks if placing in position r q results in a capture - it might be ugly to read, though easiest way
-        to ensure that all possible scenarios are considered
-        """
+        """ checks if placing in position r q results in a capture """
         diamonds = [
             [(r - 1, q), (r + 1, q - 1), (r, q - 1)],  # first two are adjacent, last item in list is adjacent to (r,q)
             [(r+1, q), (r-1, q+1), (r, q+1)],
@@ -107,16 +121,30 @@ class State:
                 return [p1, p2]
         except KeyError: pass
 
-    def generate_action(self, color, debug=False):
-        """ controls the logic for deciding the next action """
-        if self.ply == 0:
-            return "PLACE", 0, self.board_size//2
+    def get_branching_factor(self):
+        # returns the number of occupied pieces as an approximate to branching factor.
+        # Low occupied pieces => high branching factor
+        occupied_pieces = len(self.get_positions(self.color)) + len(self.get_positions(opponent_color(self.color)))
+        return occupied_pieces
+
+    def generate_action_alpha_beta(self, depth):
+        """ controls logic for deciding next action """
+
+        action = move_book(self)
+
+        if action: return action
 
         max_eval = neg_infinity
-        action = None
         for child in self.children():
-            evaluation = evaluation_function_v2(child, color, debug)
-            if evaluation > max_eval:
+
+            if depth > 0:
+                # note we start with False as we are calling on a child node
+                evaluation = alpha_beta_minimax(child, depth, neg_infinity, infinity, False, self.color)
+            else: evaluation = ev
+            if evaluation >= max_eval:
                 max_eval = evaluation
                 action = child.latest_action
         return action
+
+    def evaluate(self, color):
+        return evaluation_function_v2(self, color)

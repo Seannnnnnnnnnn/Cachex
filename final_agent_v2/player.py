@@ -1,4 +1,5 @@
-from greedy_agent.game_state import State
+from final_agent.game_state import State
+from math import floor, log
 
 
 class Player:
@@ -15,13 +16,16 @@ class Player:
         self.state = game_state
         self.board_size = n
         self.color = player
+        self.search_depth = 0  # defines the depth of search for alpha-beta. at depth = 0 we have a greedy agent
 
     def action(self):
         """
         Called at the beginning of your turn. Based on the current state
         of the game, select an action to play.
         """
-        action = self.state.generate_action(self.color)
+        # change search depth to = 1 to be safe:
+        depth = self._compute_depth(self.state.ply)
+        action = self.state.generate_action_alpha_beta(depth)
         return action
     
     def turn(self, player, action):
@@ -36,4 +40,14 @@ class Player:
         above. However, the referee has validated it at this point.
         """
         self.state.update(player, action)
+
+    @staticmethod
+    def _compute_depth(ply):
+        if ply < 10: return 0
+        if ply >= 10: return 1
+        if ply >= 30: return 2
+
+
+
+
 

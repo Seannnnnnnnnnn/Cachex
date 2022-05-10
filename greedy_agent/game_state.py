@@ -7,11 +7,10 @@ otherwise.
 
 NOTE THE 0 INDEXING!
 """
-from agent.util import print_board, opponent_color, start_goal_node
+from agent.util import print_board, opponent_color
 from typing import List, Tuple
-from agent.stateSearch.Modified_A_Star import A_Star
-from agent.stateSearch.hueristics import l1, true_l1
-from agent.consts import sigmoid, neg_infinity
+from agent.consts import neg_infinity, evaluation_function_v2
+from greedy_agent.bookLearning import move_book
 
 
 class State:
@@ -108,66 +107,22 @@ class State:
         """
         p1, p2 = diamond[0], diamond[1]
         p3 = diamond[2]
-
         try:
             if self.board[p1] == self.board[p2] and self.board[p3] == color and color != self.board[p1]\
                     and self.board[p3] != self.board[p1] and self.board[p2] != self.board[p3]:
                 return [p1, p2]
         except KeyError: pass
 
-    def generate_action(self):
+    def generate_action(self, color):
         """ controls the logic for deciding the next action """
         if self.ply == 0:
             return "PLACE", 0, self.board_size//2
 
-        max_eval = neg_infinity
         action = None
+        max_eval = neg_infinity
         for child in self.children():
-            evaluation = self.evaluate_path(self.color) + 0.1*self.evaluate_position(child.latest_action)
-            if evaluation > max_eval:
+            evaluation = evaluation_function_v2(child, color)
+            if evaluation >= max_eval:
                 max_eval = evaluation
                 action = child.latest_action
         return action
-
-    def evaluate(self):
-        return self.evaluate_path(self.color) + 0.1*self.evaluate_position(self.latest_action)
-
-    def evaluate_position(self, action):
-        """ central positions are good - we evaluate a position based on its l1 distance to centre """
-        r, q = action[1], action[2]
-        return self.board_size-true_l1(self.center, (r, q))
-
-    def evaluate_path(self, color):
-        """
-        evaluation of the state from the perspective of given color
-        """
-        opponent = opponent_color(color)
-
-        owned_positions = self.get_positions(color)
-        opponent_positions = self.get_positions(opponent)
-
-        agent_path_length = self.num_plays_to_win(color)
-        opponent_path_length = self.num_plays_to_win(opponent)
-
-        if opponent_path_length == 0:  # this occurs when agent forms a wall from one side to the other
-            return 1
-        elif agent_path_length == 0:
-            return -1
-        else:
-            net_path_length = agent_path_length - opponent_path_length
-            net_piece_count = len(owned_positions) - len(opponent_positions)
-            return 1.5*sigmoid(net_path_length) + 0.2*net_piece_count
-
-    def num_plays_to_win(self, color):
-        """
-        computes the number of plays required for color to win. We subtract 2 as path includes start and goal node
-        """
-        opponent = opponent_color(color)
-
-        owned_positions = self.get_positions(color)
-        opponent_positions = self.get_positions(opponent)
-
-        start, goal = start_goal_node(color)
-        path = A_Star(start, goal, h=l1, n=self.board_size, owned_positions=owned_positions,
-                      blocks=opponent_positions)
-        return len(path)
