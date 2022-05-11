@@ -7,9 +7,9 @@ otherwise.
 
 NOTE THE 0 INDEXING!
 """
-from agent.util import print_board, opponent_color
+from random_group3.util import print_board, opponent_color
 from typing import List, Tuple
-from random_group3.consts import neg_infinity, infinity, evaluation_function_v3
+from random_group3.consts import neg_infinity, infinity, evaluation_function_v2
 from random_group3.stateSearch.alpha_beta import alpha_beta_minimax
 from random_group3.book_learning import move_book
 from time import time
@@ -54,18 +54,31 @@ class State:
         evaluation = self.evaluate(self.color)
         return evaluation == neg_infinity or evaluation == infinity
 
+    def _is_valid(self, position):
+        r, q = position[0], position[1]
+        return self.is_empty(r, q) and 0 <= r < self.board_size and 0 <= q < self.board_size
+
+    def _get_neighbors(self, occupied_positions):
+        positions = []
+
+        for node in occupied_positions:
+            r, q = node[0], node[1]
+            neighbors = [(r - 1, q), (r + 1, q), (r, q + 1), (r, q - 1), (r - 1, q + 1), (r + 1, q - 1)]
+            neighbors = filter(self._is_valid, neighbors)
+            positions += neighbors
+        return list(dict.fromkeys(positions))
+
     def children(self) -> List:
         """ generates all child positions of the current game state """
-        children = []
         opponent = opponent_color(self.color)
-
-        for r in range(self.board_size):
-            for q in range(self.board_size):
-                if self.is_empty(r, q):
-                    child = State(opponent, self.board_size, self.board.copy())
-                    child.update(self.color, ("PLACE", r, q))
-                    children.append(child)
-
+        occupied_positions = self.get_positions(self.color) + self.get_positions(opponent)
+        child_positions = self._get_neighbors(occupied_positions)
+        children = []
+        for position in child_positions:
+            r, q = position[0], position[1]
+            child = State(opponent, self.board_size, self.board.copy())
+            child.update(self.color, ("PLACE", r, q))
+            children.append(child)
         return children
 
     def board_list(self):
@@ -132,8 +145,8 @@ class State:
 
         t0 = time()
 
-        # overwrite depth limit in the case of no time
-        if self.board_size > 3 and self.time_cap - self.elapsed < 4.5: depth = 0
+        # overwrite depth limit in the case of no time. We allow a n second buffer
+        if self.board_size > 3 and self.time_cap - self.elapsed < self.board_size: depth = 0
 
         if self.board_size > 3:
             action = move_book(self)
@@ -152,4 +165,4 @@ class State:
         return action
 
     def evaluate(self, color):
-        return evaluation_function_v3(self, color)
+        return evaluation_function_v2(self, color)

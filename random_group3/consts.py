@@ -2,10 +2,10 @@
 infinity = float('inf')
 neg_infinity = float('-inf')
 
-import math
-from agent.util import opponent_color, start_goal_node
-from agent.stateSearch.Modified_A_Star import A_Star
-from agent.stateSearch.hueristics import l1
+
+from random_group3.util import opponent_color, start_goal_node
+from random_group3.stateSearch.Modified_A_Star import A_Star
+from random_group3.stateSearch.hueristics import l1
 
 
 def evaluation_function_v1(state, color: str):

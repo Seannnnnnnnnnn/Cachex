@@ -1,5 +1,4 @@
 from random_group3.game_state import State
-# TODO: add in centrality rule
 
 
 class Player:
@@ -22,8 +21,7 @@ class Player:
         Called at the beginning of your turn. Based on the current state
         of the game, select an action to play.
         """
-        if self.board_size == 3: depth = 5
-        else: depth = self._compute_depth(self.state.ply, self.board_size)
+        depth = self._compute_depth(self.state.ply)
         action = self.state.generate_action_alpha_beta(depth)
         return action
     
@@ -41,20 +39,8 @@ class Player:
         self.state.update(player, action)
 
     @staticmethod
-    def _compute_depth(ply, n):
-        if 10 <= n <= 15: return 0
-
-        if n == 9 and ply <= 15: return 0
-        if n == 9 and ply > 15: return 1
-
-        if n == 8 and ply <= 10: return 0
-        if n == 8 and ply > 10: return 1
-
-        if 5 <= n <= 7 and ply <= 8: return 0
-        if 5 <= n <= 7 and ply > 8: return 1
-
-        if n == 4 and ply <= 4: return 3
-        if n == 4 and ply > 4: return 4
-
-        if n == 3: return 4
+    def _compute_depth(ply):
+        if ply < 10:
+            return 2
+        else: return 1
 
